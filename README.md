@@ -26,7 +26,7 @@ Or install it yourself as:
 
     $ gem install pager
 
-Add the [pager.rb](https://github.com/BambangSinaga/pager/lib/config/pager.rb)
+Add the [pager.rb](https://github.com/BambangSinaga/pager/blob/master/lib/config/pager.rb)
 
 If you use Rails, put it into the `config/initializers` dir
 
