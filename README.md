@@ -15,7 +15,7 @@ To support cursor-based pagination, this specification defines three query param
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'pager'
+gem 'rb_pager'
 ```
 
 And then execute:
@@ -24,9 +24,9 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install pager
+    $ gem install rb_pager
 
-Add the [pager.rb](https://github.com/BambangSinaga/pager/blob/master/lib/config/pager.rb)
+Add the [rb_pager.rb](https://github.com/BambangSinaga/rb_pager/blob/master/lib/config/rb_pager.rb)
 
 If you use Rails, put it into the `config/initializers` dir
 
@@ -63,7 +63,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/BambangSinaga/pager. This project is intended to be a safe, welcoming space for collaboration, and contributors.
+Bug reports and pull requests are welcome on GitHub at https://github.com/BambangSinaga/rb_pager. This project is intended to be a safe, welcoming space for collaboration, and contributors.
 
 ## License
 
