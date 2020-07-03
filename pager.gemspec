@@ -6,8 +6,9 @@ Gem::Specification.new do |spec|
   spec.authors       = ["BambangSinaga"]
   spec.email         = ["mejbambang@gmail.com"]
 
-  spec.summary       = "Cursor based pagination for Rails Api"
-  # spec.description   = %q{TODO: Write a longer description or delete this line.}
+  spec.summary       = "Cursor based pagination for Rails App"
+  spec.description   = %q{ActiveRecord plugin for cursor based pagination for Ruby on Rails. \n
+    Cursor-based pagination (aka keyset pagination) is a common pagination strategy that avoids many of the pitfalls of “offset–limit” pagination.}
   spec.homepage      = "https://github.com/BambangSinaga/pager"
   spec.license       = "MIT"
   spec.required_ruby_version = Gem::Requirement.new(">= 2.3.0")
@@ -20,7 +21,7 @@ Gem::Specification.new do |spec|
 
   spec.add_development_dependency "sqlite3"
   spec.add_development_dependency "activerecord"
-  spec.add_development_dependency "rspec-rails", "~> 3.8.2"
+  spec.add_development_dependency "rspec"
 
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
