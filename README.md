@@ -32,7 +32,28 @@ If you use Rails, put it into the `config/initializers` dir
 
 ## Usage
 
-TODO: Write usage instructions here
+Once the gem installed on your project, usually you don't need to do anything.
+The system use 	`Base64.strict_decode64` and `Base64.strict_encode64` for cursor values
+
+```ruby
+# return first 20 employee records, by default limit set to 20
+Employee.pager(after:  nil)
+
+# return first 15 employee records
+Employee.pager(after:  nil, limit: 15)
+
+# return first 10 employee records order by created_at asc
+# /employee?limit=10&sort=created_at
+Employee.pager(after:  nil, limit:  10, sort:  'created_at')
+
+# return first 10 employee records order by created_at desc
+# /employee?limit=10&sort=-created_at
+Employee.pager(after:  nil, limit:  10, sort:  '-created_at')
+
+# [order by non uniq column](https://engineering.shopify.com/blogs/engineering/pagination-relative-cursors)
+# /employee?limit=10&sort=name,id
+Employee.pager(after:  nil, limit:  10, sort:  'name,id')
+```
 
 ## Development
 
