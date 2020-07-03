@@ -1,8 +1,14 @@
+
 # Pager
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/pager`. To experiment with that code, run `bin/console` for an interactive prompt.
 
-TODO: Delete this and the text above, and describe your gem
+Cursor-based pagination (aka keyset pagination) is a  [common](https://slack.engineering/evolving-api-pagination-at-slack-1c1f644f8e12)  [pagination strategy](https://www.citusdata.com/blog/2016/03/30/five-ways-to-paginate/)  that avoids many of the pitfalls of “offset–limit” pagination.
+
+For example, with offset–limit pagination, if an item from a prior page is deleted while the client is paginating, all subsequent results will be shifted forward by one. Therefore, when the client requests the next page, there’s one result that it will skip over and never see. Conversely, if a result is added to the list of results as the client is paginating, the client may see the same result multiple times, on different pages. Cursor-based pagination can prevent both of these possibilities.
+
+Cursor-based pagination also performs better for large data sets under most implementations.
+
+To support cursor-based pagination, this specification defines three query parameters `after`, `limit`, `sort`
 
 ## Installation
 
@@ -20,6 +26,10 @@ Or install it yourself as:
 
     $ gem install pager
 
+Add the [pager.rb](https://github.com/BambangSinaga/pager/lib/config/pager.rb)
+
+If you use Rails, put it into the `config/initializers` dir
+
 ## Usage
 
 TODO: Write usage instructions here
@@ -32,13 +42,8 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/pager. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [code of conduct](https://github.com/[USERNAME]/pager/blob/master/CODE_OF_CONDUCT.md).
-
+Bug reports and pull requests are welcome on GitHub at https://github.com/BambangSinaga/pager. This project is intended to be a safe, welcoming space for collaboration, and contributors.
 
 ## License
 
 The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
-
-## Code of Conduct
-
-Everyone interacting in the Pager project's codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/pager/blob/master/CODE_OF_CONDUCT.md).
