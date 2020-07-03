@@ -13,7 +13,7 @@ RSpec.describe Pager do
     before { Employee.delete_all }
 
     it 'returns empty collection' do
-      records, meta = Employee.pager(after: nil, limit: nil)
+      records, meta = Employee.pager(after: nil)
 
       expect(records).to be_empty
       expect(meta[:next_cursor]).to eql ''
@@ -27,7 +27,7 @@ RSpec.describe Pager do
 
     context 'limit not set' do
       it 'returns collection with default limit' do
-        records, meta = Employee.pager(after: nil, limit: nil)
+        records, meta = Employee.pager(after: nil)
         next_cursor = Base64.strict_encode64({ 'id': records.last.id }.to_json)
 
         expect(records).to eql Employee.limit(15).to_a

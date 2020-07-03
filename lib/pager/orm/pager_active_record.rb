@@ -6,7 +6,7 @@ module Pager
       AR_ORDER = { '+' => :asc, '-' => :desc }
       AREL_ORDER = { asc: :gt, desc: :lt }
 
-      def pager(after:, limit:, sort: nil)
+      def pager(after:, limit: nil, sort: nil)
         page_limit = limit || Pager.configuration.limit
         sort_params = sort
         sorted_columns, sorter = build_order_expression(sort)
