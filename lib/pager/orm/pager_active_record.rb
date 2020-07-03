@@ -7,7 +7,7 @@ module Pager
       AREL_ORDER = { asc: :gt, desc: :lt }
 
       def pager(after:, limit:, sort: nil)
-        page_limit = limit || 15
+        page_limit = limit || Pager.configuration.limit
         sort_params = sort
         sorted_columns, sorter = build_order_expression(sort)
         collection = if after.nil?
