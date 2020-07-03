@@ -1,4 +1,4 @@
-module Pager
+module RbPager
   module ActiveRecord
     extend ActiveSupport::Concern
 
@@ -7,7 +7,7 @@ module Pager
       AREL_ORDER = { asc: :gt, desc: :lt }
 
       def pager(after:, limit: nil, sort: nil)
-        page_limit = limit || Pager.configuration.limit
+        page_limit = limit || RbPager.configuration.limit
         sort_params = sort
         sorted_columns, sorter = build_order_expression(sort)
         collection = if after.nil?

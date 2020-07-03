@@ -1,4 +1,4 @@
-module Pager
+module RbPager
   class Configuration
     attr_accessor :limit, :max_limit
 

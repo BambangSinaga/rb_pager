@@ -1,8 +1,8 @@
 require 'active_record'
-require 'pager/version'
-require "pager/configuration"
+require 'rb_pager/version'
+require "rb_pager/configuration"
 
-module Pager
+module RbPager
   class Error < StandardError; end
 
   class << self
@@ -16,6 +16,6 @@ module Pager
 end
 
 if defined?(ActiveRecord)
-  require 'pager/orm/pager_active_record'
-  ActiveRecord::Base.send :include, Pager::ActiveRecord
+  require 'rb_pager/orm/pager_active_record'
+  ActiveRecord::Base.send :include, RbPager::ActiveRecord
 end

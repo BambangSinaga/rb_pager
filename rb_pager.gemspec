@@ -1,22 +1,22 @@
-require_relative 'lib/pager/version'
+require_relative 'lib/rb_pager/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "pager"
-  spec.version       = Pager::VERSION
+  spec.name          = "rb_pager"
+  spec.version       = RbPager::VERSION
   spec.authors       = ["BambangSinaga"]
   spec.email         = ["mejbambang@gmail.com"]
 
-  spec.summary       = "Cursor based pagination for Rails App"
+  spec.summary       = "Cursor based pagination for active_record currently"
   spec.description   = %q{ActiveRecord plugin for cursor based pagination for Ruby on Rails. \n
     Cursor-based pagination (aka keyset pagination) is a common pagination strategy that avoids many of the pitfalls of “offset–limit” pagination.}
-  spec.homepage      = "https://github.com/BambangSinaga/pager"
+  spec.homepage      = "https://github.com/BambangSinaga/rb_pager"
   spec.license       = "MIT"
   spec.required_ruby_version = Gem::Requirement.new(">= 2.3.0")
 
   spec.metadata["allowed_push_host"] = "https://rubygems.org/"
 
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "https://github.com/BambangSinaga/pager"
+  spec.metadata["source_code_uri"] = "https://github.com/BambangSinaga/rb_pager"
   # spec.metadata["changelog_uri"] = "TODO: Put your gem's CHANGELOG.md URL here."
 
   spec.add_development_dependency "sqlite3"

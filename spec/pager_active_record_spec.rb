@@ -1,10 +1,10 @@
-RSpec.describe Pager do
+RSpec.describe RbPager do
   it "has a version number" do
-    expect(Pager::VERSION).not_to be nil
+    expect(RbPager::VERSION).not_to be nil
   end
 
   before do
-    Pager.configure do |config|
+    RbPager.configure do |config|
       config.limit = 15
     end
   end

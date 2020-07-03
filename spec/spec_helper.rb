@@ -1,5 +1,5 @@
 require "bundler/setup"
-require "pager"
+require "rb_pager"
 
 ActiveRecord::Base.establish_connection(:adapter => "sqlite3",
                                        :database => File.dirname(__FILE__) + "/pager.sqlite3")

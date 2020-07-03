@@ -1,6 +1,6 @@
 # require "spec_helper"
 
-RSpec.describe Pager::Configuration do
+RSpec.describe RbPager::Configuration do
   describe '#limit' do
     it 'returns default value' do
       config = described_class.new
