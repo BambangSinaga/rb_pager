@@ -28,6 +28,6 @@ jobs:
       with:
         ruby-version: 2.6
     - name: Install dependencies
-      run: bundle install
+      run: gem install sqlite3 -v '1.4.2' --source 'https://rubygems.org/' && bundle install
     - name: Run tests
       run: bundle exec rake
