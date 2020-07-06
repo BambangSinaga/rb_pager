@@ -1,5 +1,6 @@
 
 # Pager
+[![Gem Version](https://badge.fury.io/rb/rb_pager.svg)](https://badge.fury.io/rb/rb_pager)
 ![build](https://github.com/BambangSinaga/rb_pager/workflows/build/badge.svg)
 
 Cursor-based pagination (aka keyset pagination) is a  [common](https://slack.engineering/evolving-api-pagination-at-slack-1c1f644f8e12)  [pagination strategy](https://www.citusdata.com/blog/2016/03/30/five-ways-to-paginate/)  that avoids many of the pitfalls of “offset–limit” pagination.
