@@ -38,22 +38,22 @@ The system use 	`Base64.strict_decode64` and `Base64.strict_encode64` for cursor
 
 ```ruby
 # return first 20 employee records, by default limit set to 20
-Employee.pager(after:  nil)
+Employee.pager
 
 # return first 15 employee records
-Employee.pager(after:  nil, limit: 15)
+Employee.pager(limit: 15)
 
 # return first 10 employee records order by created_at asc
 # /employee?limit=10&sort=created_at
-Employee.pager(after:  nil, limit:  10, sort:  'created_at')
+Employee.pager(after:  'w33t44==', limit:  10, sort:  'created_at')
 
 # return first 10 employee records order by created_at desc
 # /employee?limit=10&sort=-created_at
-Employee.pager(after:  nil, limit:  10, sort:  '-created_at')
+Employee.pager(after:  'w33t44==', limit:  10, sort:  '-created_at')
 
 # [order by non uniq column](https://engineering.shopify.com/blogs/engineering/pagination-relative-cursors)
 # /employee?limit=10&sort=name,id
-Employee.pager(after:  nil, limit:  10, sort:  'name,id')
+Employee.pager(after:  'w33t44==', limit:  10, sort:  'name,id')
 ```
 
 ## Development
