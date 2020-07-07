@@ -6,9 +6,12 @@ module RbPager
       AR_ORDER = { '+' => :asc, '-' => :desc }
       AREL_ORDER = { asc: :gt, desc: :lt }
 
-      def pager(after:, limit: nil, sort: nil)
+      def pager(after: nil, limit: nil, sort: nil)
         page_limit = limit || RbPager.configuration.limit
         sort_params = sort
+
+        raise InvalidLimitValueError if limit && limit < 1
+
         sorted_columns, sorter = build_order_expression(sort)
         collection = if after.nil?
                        order(sorter).extending(ActiveRecordRelationMethods).limit(page_limit)
@@ -81,7 +84,7 @@ module RbPager
         next_cursor = next_cursor(collection, sorted_columns)
 
         meta = { next_cursor: next_cursor }
-        [collection.to_a, meta]
+        [collection, meta]
       end
 
       def next_cursor(collection, sorted_columns)

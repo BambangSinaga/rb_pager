@@ -1,9 +1,10 @@
 require 'active_record'
 require 'rb_pager/version'
-require "rb_pager/configuration"
+require 'rb_pager/configuration'
+require 'pry'
 
 module RbPager
-  class Error < StandardError; end
+  class InvalidLimitValueError < StandardError; end
 
   class << self
     attr_accessor :configuration

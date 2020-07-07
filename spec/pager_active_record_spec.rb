@@ -13,9 +13,9 @@ RSpec.describe RbPager do
     before { Employee.delete_all }
 
     it 'returns empty collection' do
-      records, meta = Employee.pager(after: nil)
+      records, meta = Employee.pager
 
-      expect(records).to be_empty
+      expect(records.to_a).to be_empty
       expect(meta[:next_cursor]).to eql ''
     end
   end
@@ -25,23 +25,31 @@ RSpec.describe RbPager do
       load File.dirname(__FILE__) + '/support/seeds.rb'
     end
 
-    context 'limit not set' do
-      it 'returns collection with default limit' do
-        records, meta = Employee.pager(after: nil)
-        next_cursor = Base64.strict_encode64({ 'id': records.last.id }.to_json)
+    describe '#limit' do
+      context 'limit not set' do
+        it 'returns collection with default limit' do
+          records, meta = Employee.pager
+          next_cursor = Base64.strict_encode64({ 'id': records.last.id }.to_json)
 
-        expect(records).to eql Employee.limit(15).to_a
-        expect(meta[:next_cursor]).to eql next_cursor
+          expect(records.to_a).to eql Employee.limit(15).to_a
+          expect(meta[:next_cursor]).to eql next_cursor
+        end
       end
-    end
 
-    context 'limit set to 10' do
-      it 'returns collection with 10 records' do
-        records, meta = Employee.pager(after: nil, limit: 10)
-        next_cursor = Base64.strict_encode64({ 'id': records.last.id }.to_json)
+      context 'limit set to -10' do
+        it 'raise InvalidParameterValueError' do
+          expect { Employee.pager(limit: -10) }.to raise_error(RbPager::InvalidLimitValueError)
+        end
+      end
 
-        expect(records).to eql Employee.limit(10).to_a
-        expect(meta[:next_cursor]).to eql next_cursor
+      context 'limit set to 10' do
+        it 'returns collection with 10 records' do
+          records, meta = Employee.pager(after: nil, limit: 10)
+          next_cursor = Base64.strict_encode64({ 'id': records.last.id }.to_json)
+
+          expect(records.to_a).to eql Employee.limit(10).to_a
+          expect(meta[:next_cursor]).to eql next_cursor
+        end
       end
     end
 
@@ -52,7 +60,7 @@ RSpec.describe RbPager do
           { 'id': records.last.id, 'created_at': records.last.created_at }.to_json
         )
 
-        expect(records).to eql Employee.order(:created_at).limit(10).to_a
+        expect(records.to_a).to eql Employee.order(:created_at).limit(10).to_a
         expect(meta[:next_cursor]).to eql next_cursor
       end
     end
@@ -63,8 +71,8 @@ RSpec.describe RbPager do
         next_cursor = Base64.strict_encode64(
           { 'id': records.last.id, 'name': records.last.name }.to_json
         )
-        # binding.pry
-        expect(records).to eql Employee.order(:name, :id).limit(10).to_a
+
+        expect(records.to_a).to eql Employee.order(:name, :id).limit(10).to_a
         expect(meta[:next_cursor]).to eql next_cursor
       end
     end
