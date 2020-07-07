@@ -54,7 +54,20 @@ Employee.pager(after:  'w33t44==', limit:  10, sort:  '-created_at')
 # [order by non uniq column](https://engineering.shopify.com/blogs/engineering/pagination-relative-cursors)
 # /employee?limit=10&sort=name,id
 Employee.pager(after:  'w33t44==', limit:  10, sort:  'name,id')
+
+# on EmployeesController
+records, meta = Employee.pager(limit:  15)
+# meta => { next_cursor => 'uahOI==' }
+render  json: EmployeeSerializer.new(records, meta: meta).serialized_json, status:  :ok
 ```
+
+## On progress
+
+ - [ ] implement  `before`  cursor
+ - [ ] meta url for first, last, next and previous page, collection size
+ - [ ] [error-cases](https://jsonapi.org/profiles/ethanresnick/cursor-pagination/#auto-id-error-cases)
+ - [ ] custom encoder
+ - [ ] ui helper
 
 ## Development
 
