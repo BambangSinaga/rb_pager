@@ -37,16 +37,12 @@ module RbPager
         if sorted_columns.values.all? :asc
           Arel::Nodes::GreaterThan.new(
             Arel::Nodes::Grouping.new(@after.keys.map{ |col| arel_table[col] }),
-            Arel::Nodes::Grouping.new(
-              @after.values.map do |col|
-                Arel::Nodes.build_quoted(col)
-              end
-            )
+            Arel::Nodes::Grouping.new(@after.values.map{ |col| Arel::Nodes.build_quoted(col) })
           )
         else
           Arel::Nodes::LessThan.new(
             Arel::Nodes::Grouping.new(@after.keys.map{|col| arel_table[col]}),
-            Arel::Nodes::Grouping.new(@after.values.map{|col| Arel::Nodes.build_quoted(col)})
+            Arel::Nodes::Grouping.new(@after.values.map{ |col| Arel::Nodes.build_quoted(col) })
           )
         end
       end
