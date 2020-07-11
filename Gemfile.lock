@@ -24,6 +24,7 @@ GEM
       concurrent-ruby (~> 1.0)
     method_source (1.0.0)
     minitest (5.14.1)
+    pg (1.2.3)
     pry (0.13.1)
       coderay (~> 1.1)
       method_source (~> 1.0)
@@ -41,7 +42,6 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.9.0)
     rspec-support (3.9.3)
-    sqlite3 (1.4.2)
     thread_safe (0.3.6)
     tzinfo (1.2.7)
       thread_safe (~> 0.1)
@@ -52,11 +52,11 @@ PLATFORMS
 
 DEPENDENCIES
   activerecord (>= 5.2)
+  pg
   pry
   rake (~> 13.0)
   rb_pager!
   rspec (~> 3.0)
-  sqlite3
 
 BUNDLED WITH
    2.1.4
