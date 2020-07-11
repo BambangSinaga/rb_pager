@@ -2,7 +2,7 @@ require "bundler/setup"
 require "rb_pager"
 
 ActiveRecord::Base.establish_connection(
-    { adapter: "postgresql", database: "rb_pager_test" }
+  { adapter: "postgresql", database: "rb_pager_test" }
 )
 
 load File.dirname(__FILE__) + '/support/schema.rb'
