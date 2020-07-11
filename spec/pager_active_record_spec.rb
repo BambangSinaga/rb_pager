@@ -131,5 +131,82 @@ RSpec.describe RbPager do
         end
       end
     end
+
+
+    describe '#before' do
+      context 'order by uniq column' do
+        context 'with cursor id order by asc' do
+          it 'returns collection' do
+            first_record = Employee.find(5)
+            prev = Base64.strict_encode64("created_at:#{first_record.created_at.rfc3339(9)}")
+
+            records, meta = Employee.pager(before: prev, limit: 10, sort: 'created_at')
+
+            expect(records.to_a).to eql Employee.where('created_at < ?', first_record.created_at).order(:created_at).limit(10).to_a
+            expect(meta[:next_cursor]).to eql no_cursor
+          end
+        end
+
+        context 'with cursor id order by desc' do
+          it 'returns collection' do
+            first_record = Employee.find(5)
+            prev = Base64.strict_encode64("created_at:#{first_record.created_at.rfc3339(9)}")
+
+            records, meta = Employee.pager(before: prev, limit: 10, sort: '-created_at')
+            next_cursor = Base64.strict_encode64("created_at:#{records.last.created_at.rfc3339(9)}")
+
+            expect(records.to_a).to eql Employee.where('created_at > ?', first_record.created_at).order(created_at: :desc).limit(10).to_a
+            expect(meta[:next_cursor]).to eql next_cursor
+          end
+        end
+
+        context 'without cursor' do
+          it 'returns collection' do
+            records, meta = Employee.pager(limit: 10, sort: 'created_at')
+            next_cursor = Base64.strict_encode64("created_at:#{records.last.created_at.rfc3339(9)}")
+
+            expect(records.to_a).to eql Employee.order(:created_at).limit(10).to_a
+            expect(meta[:next_cursor]).to eql next_cursor
+          end
+        end
+      end
+
+      context 'order by not uniq column' do
+        context 'with cursor name, id order by asc' do
+          it 'returns collection' do
+            first_record = Employee.find(5)
+            prev = Base64.strict_encode64("name:#{first_record.name},id:#{first_record.id}")
+
+            records, meta = Employee.pager(before: prev, limit: 10, sort: 'name,id')
+
+            expect(records.to_a).to eql Employee.where('(name, id) < (?, ?)', first_record.name, first_record.id).order(:name, :id).limit(10).to_a
+            expect(meta[:next_cursor]).to eql no_cursor
+          end
+        end
+
+        context 'with cursor name, id order by desc' do
+          it 'returns collection' do
+            first_record = Employee.find(5)
+            prev = Base64.strict_encode64("name:#{first_record.name},id:#{first_record.id}")
+
+            records, meta = Employee.pager(before: prev, limit: 10, sort: '-name,-id')
+            next_cursor = Base64.strict_encode64("name:#{records.last.name},id:#{records.last.id}")
+
+            expect(records.to_a).to eql Employee.where('(name, id) > (?, ?)', first_record.name, first_record.id).order(name: :desc, id: :desc).limit(10).to_a
+            expect(meta[:next_cursor]).to eql next_cursor
+          end
+        end
+
+        context 'without cursor' do
+          it 'returns collection' do
+            records, meta = Employee.pager(limit: 10, sort: 'name,id')
+            next_cursor = Base64.strict_encode64("name:#{records.last.name},id:#{records.last.id}")
+
+            expect(records.to_a).to eql Employee.order(:name, :id).limit(10).to_a
+            expect(meta[:next_cursor]).to eql next_cursor
+          end
+        end
+      end
+    end
   end
 end

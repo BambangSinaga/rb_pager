@@ -6,16 +6,19 @@ module RbPager
       AR_ORDER = { '+' => :asc, '-' => :desc }
       AREL_ORDER = { asc: :gt, desc: :lt }
 
-      def pager(after: nil, limit: nil, sort: nil)
+      def pager(after: nil, before: nil, limit: nil, sort: nil)
         raise InvalidLimitValueError if limit && limit < 1
         instance_variable_set(:@sorted_columns, nil)
 
         page_limit = limit || RbPager.configuration.limit
         @sort = sort
         @after = decode(after)
-        collection = where(apply_after).order(sorted_columns).extending(ActiveRecordRelationMethods).limit(page_limit)
+        @before = decode(before)
 
-        create_paginate_meta(collection)
+        collection = where(apply_after)
+        collection = collection.where(apply_before)
+
+        create_paginate_meta(collection.order(sorted_columns).extending(ActiveRecordRelationMethods).limit(page_limit))
       end
 
       private
@@ -43,6 +46,22 @@ module RbPager
           Arel::Nodes::LessThan.new(
             Arel::Nodes::Grouping.new(@after.keys.map{|col| arel_table[col]}),
             Arel::Nodes::Grouping.new(@after.values.map{ |col| Arel::Nodes.build_quoted(col) })
+          )
+        end
+      end
+
+      def apply_before
+        return nil if @before.nil?
+
+        if sorted_columns.values.all? :asc
+          Arel::Nodes::LessThan.new(
+            Arel::Nodes::Grouping.new(@before.keys.map{ |col| arel_table[col] }),
+            Arel::Nodes::Grouping.new(@before.values.map{ |col| Arel::Nodes.build_quoted(col) })
+          )
+        else
+          Arel::Nodes::GreaterThan.new(
+            Arel::Nodes::Grouping.new(@before.keys.map{|col| arel_table[col]}),
+            Arel::Nodes::Grouping.new(@before.values.map{ |col| Arel::Nodes.build_quoted(col) })
           )
         end
       end
@@ -86,7 +105,9 @@ module RbPager
           next_cursor << "#{key}:#{collection.last.send(key)}"
         end
 
-        next_cursor = ["#{primary_key}:#{collection.last.send(primary_key)}"] if sorted_columns.blank?
+        if sorted_columns.blank?
+          next_cursor = ["#{primary_key}:#{collection.last.send(primary_key)}"]
+        end
 
         Base64.strict_encode64(next_cursor.join(','))
       end
