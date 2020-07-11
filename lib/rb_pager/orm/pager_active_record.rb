@@ -12,53 +12,43 @@ module RbPager
 
         page_limit = limit || RbPager.configuration.limit
         @sort = sort
-        collection = if after.nil?
-                       order(sorted_columns).extending(ActiveRecordRelationMethods).limit(page_limit)
-                     else
-                       custom_expression = create_custom_expression(after)
-                       where(custom_expression).order(sorter).extending(ActiveRecordRelationMethods).limit(page_limit)
-                     end
+        @after = decode(after)
+        collection = where(apply_after).order(sorted_columns).extending(ActiveRecordRelationMethods).limit(page_limit)
 
         create_paginate_meta(collection)
       end
 
       private
 
-      def create_custom_expression(cursor_params)
-        decode_cursor_params = JSON.parse(Base64.strict_decode64(cursor_params))
-        return arel_table[primary_key].gt(decode_cursor_params[primary_key]) if sorted_columns.blank?
+      def decode(cursor)
+        return nil if cursor.nil?
 
-        filter_ordered_columns = filter_with_ordered_columns(decode_cursor_params)
-        filter_primary_key = filter_with_primary_key(decode_cursor_params)
-
-        filter_ordered_columns.or(filter_primary_key)
+        decode = Base64.strict_decode64(cursor)
+        Hash[
+          decode.split(',').map do |pair|
+            k, v = pair.split(':', 2)
+          end
+        ]
       end
 
-      def filter_with_ordered_columns(decode_cursor_params)
-        result = self
-        sorted_columns.each_with_index do |(column, type), index|
-          result = if index.zero?
-                     result.arel_table[column].send(AREL_ORDER[type])
-                   else
-                     result.or(arel_table[column].send(AREL_ORDER[type]))
-                   end
+      def apply_after
+        return nil if @after.nil?
+
+        if sorted_columns.values.all? :asc
+          Arel::Nodes::GreaterThan.new(
+            Arel::Nodes::Grouping.new(@after.keys.map{ |col| arel_table[col] }),
+            Arel::Nodes::Grouping.new(
+              @after.values.map do |col|
+                Arel::Nodes.build_quoted(col)
+              end
+            )
+          )
+        else
+          Arel::Nodes::LessThan.new(
+            Arel::Nodes::Grouping.new(@after.keys.map{|col| arel_table[col]}),
+            Arel::Nodes::Grouping.new(@after.values.map{|col| Arel::Nodes.build_quoted(col)})
+          )
         end
-
-        result
-      end
-
-      def filter_with_primary_key(decode_cursor_params)
-        result = self
-
-        decode_cursor_params.each_with_index do |(column, value), index|
-          result = if index.zero?
-                     result.arel_table[column].gt(value)
-                   else
-                     result.and(arel_table[column].eq(value))
-                   end
-        end
-
-        result
       end
 
       def sorted_columns
@@ -70,11 +60,11 @@ module RbPager
 
       def construct_sorted_columns
         sorted_params = {}
-        fields = @sort.split(',') & attribute_names
+        fields = @sort.split(',')
 
         fields.each do |field|
           sort_sign = field =~ /\A[+-]/ ? field.slice!(0) : '+'
-          sorted_params[field] = AR_ORDER[sort_sign]
+          sorted_params[field] = AR_ORDER[sort_sign] if attribute_names.include?(field)
         end
 
         sorted_params
@@ -90,13 +80,19 @@ module RbPager
       def next_cursor(collection)
         return '' unless collection.left_over?
 
-        next_cursor = { 'id': collection.last.id }
+        next_cursor = []
 
         sorted_columns.each do |key, _value|
-          next_cursor.merge!(Hash[key, collection.last.send(key)])
+          if type_for_attribute(key).type.eql? :datetime
+            next_cursor << "#{key}:#{collection.last.send(key).rfc3339(9)}"
+            next
+          end
+          next_cursor << "#{key}:#{collection.last.send(key)}"
         end
 
-        Base64.strict_encode64(next_cursor.to_json)
+        next_cursor = ["#{primary_key}:#{collection.last.send(primary_key)}"] if sorted_columns.blank?
+
+        Base64.strict_encode64(next_cursor.join(','))
       end
     end
 
