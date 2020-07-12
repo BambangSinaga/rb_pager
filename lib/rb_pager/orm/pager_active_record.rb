@@ -4,7 +4,6 @@ module RbPager
 
     module ClassMethods
       AR_ORDER = { '+' => :asc, '-' => :desc }
-      AREL_ORDER = { asc: :gt, desc: :lt }
 
       def pager(after: nil, before: nil, limit: nil, sort: nil)
         raise InvalidLimitValueError if limit && limit < 1
