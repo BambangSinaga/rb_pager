@@ -13,11 +13,15 @@ module RbPager
         @sort = sort
         @after = decode(after)
         @before = decode(before)
+        @direction = :next
 
         collection = where(apply_after)
         collection = collection.where(apply_before)
+        collection = collection.order(sorted_columns)
+                               .extending(ActiveRecordRelationMethods)
+                               .limit(page_limit)
 
-        create_paginate_meta(collection.order(sorted_columns).extending(ActiveRecordRelationMethods).limit(page_limit))
+        create_paginate_meta(collection)
       end
 
       private
@@ -42,6 +46,7 @@ module RbPager
             Arel::Nodes::Grouping.new(@after.values.map{ |col| Arel::Nodes.build_quoted(col) })
           )
         else
+          @direction = :prev
           Arel::Nodes::LessThan.new(
             Arel::Nodes::Grouping.new(@after.keys.map{|col| arel_table[col]}),
             Arel::Nodes::Grouping.new(@after.values.map{ |col| Arel::Nodes.build_quoted(col) })
@@ -53,6 +58,7 @@ module RbPager
         return nil if @before.nil?
 
         if sorted_columns.values.all? :asc
+          @direction = :prev
           Arel::Nodes::LessThan.new(
             Arel::Nodes::Grouping.new(@before.keys.map{ |col| arel_table[col] }),
             Arel::Nodes::Grouping.new(@before.values.map{ |col| Arel::Nodes.build_quoted(col) })
@@ -85,30 +91,37 @@ module RbPager
       end
 
       def create_paginate_meta(collection)
-        next_cursor = next_cursor(collection)
+        cursor = cursor(collection)
 
-        meta = { next_cursor: next_cursor }
+        meta = { prev_cursor: cursor.first, next_cursor: cursor.last }
         [collection, meta]
       end
 
-      def next_cursor(collection)
-        return '' unless collection.left_over?
+      def cursor(collection)
+        return ['', ''] if collection.total_size.zero?
 
-        next_cursor = []
-
-        sorted_columns.each do |key, _value|
-          if type_for_attribute(key).type.eql? :datetime
-            next_cursor << "#{key}:#{collection.last.send(key).rfc3339(9)}"
-            next
-          end
-          next_cursor << "#{key}:#{collection.last.send(key)}"
-        end
+        prev_cursor, next_cursor = [], []
 
         if sorted_columns.blank?
+          prev_cursor = ["#{primary_key}:#{collection.first.send(primary_key)}"]
           next_cursor = ["#{primary_key}:#{collection.last.send(primary_key)}"]
+        else
+          sorted_columns.each do |key, _value|
+            if type_for_attribute(key).type.eql? :datetime
+              prev_cursor << "#{key}:#{collection.first.send(key).rfc3339(9)}"
+              next_cursor << "#{key}:#{collection.last.send(key).rfc3339(9)}"
+              next
+            end
+
+            prev_cursor << "#{key}:#{collection.first.send(key)}"
+            next_cursor << "#{key}:#{collection.last.send(key)}"
+          end
         end
 
-        Base64.strict_encode64(next_cursor.join(','))
+        return ['', Base64.strict_encode64(next_cursor.join(','))] if (@after.nil? && @before.nil?) || @direction.eql?(:prev) && !collection.left_over?
+        return [Base64.strict_encode64(prev_cursor.join(',')), ''] if @direction.eql?(:next) && !collection.left_over?
+
+        [Base64.strict_encode64(prev_cursor.join(',')), Base64.strict_encode64(next_cursor.join(','))]
       end
     end
 
