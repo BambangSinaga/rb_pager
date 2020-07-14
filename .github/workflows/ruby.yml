@@ -20,7 +20,7 @@ jobs:
 
     services:
       db:
-        image: postgres:12
+        image: postgres:11.6-alpine
         ports: ['5432:5432']
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
@@ -35,8 +35,9 @@ jobs:
         ruby-version: 2.6
     - name: Setup System
       run: |
-          sudo apt-get -yqq install libpq-dev
+          sudo apt-get -y install libpq-dev
     - name: Install dependencies
       run: bundle install
     - name: Run tests
+      run: bundle exec rake db:create
       run: bundle exec rake
