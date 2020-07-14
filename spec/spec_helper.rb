@@ -2,7 +2,7 @@ require "bundler/setup"
 require "rb_pager"
 
 ActiveRecord::Base.establish_connection(
-  DATABASE_URL ||
+  ENV["DATABASE_URL"] ||
   { adapter: "postgresql", database: "rb_pager_test" }
 )
 
