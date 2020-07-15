@@ -3,25 +3,23 @@ module RbPager
     extend ActiveSupport::Concern
 
     module ClassMethods
+
       AR_ORDER = { '+' => :asc, '-' => :desc }
 
       def pager(after: nil, before: nil, limit: nil, sort: nil)
         raise InvalidLimitValueError if limit && limit < 1
         instance_variable_set(:@sorted_columns, nil)
+        instance_variable_set(:@collection, nil)
+        instance_variable_set(:@records, nil)
 
-        page_limit = limit || RbPager.configuration.limit
+        @page_limit = limit || RbPager.configuration.limit
         @sort = sort
+
         @after = decode(after)
         @before = decode(before)
         @direction = :next
 
-        collection = where(apply_after)
-        collection = collection.where(apply_before)
-        collection = collection.order(sorted_columns)
-                               .extending(ActiveRecordRelationMethods)
-                               .limit(page_limit)
-
-        create_paginate_meta(collection)
+        create_paginate_meta
       end
 
       private
@@ -90,11 +88,23 @@ module RbPager
         sorted_params
       end
 
-      def create_paginate_meta(collection)
+      def create_paginate_meta
         cursor = cursor(collection)
 
         meta = { prev_cursor: cursor.first, next_cursor: cursor.last }
         [collection, meta]
+      end
+
+      def collection
+        @collection ||= where(apply_after)
+                        .where(apply_before)
+                        .order(sorted_columns)
+                        .extending(ActiveRecordRelationMethods)
+                        .limit(@page_limit)
+      end
+
+      def records
+        @records || collection.to_a
       end
 
       def cursor(collection)
@@ -103,18 +113,18 @@ module RbPager
         prev_cursor, next_cursor = [], []
 
         if sorted_columns.blank?
-          prev_cursor = ["#{primary_key}:#{collection.first.send(primary_key)}"]
-          next_cursor = ["#{primary_key}:#{collection.last.send(primary_key)}"]
+          prev_cursor = ["#{primary_key}:#{records.first.send(primary_key)}"]
+          next_cursor = ["#{primary_key}:#{records.last.send(primary_key)}"]
         else
           sorted_columns.each do |key, _value|
             if type_for_attribute(key).type.eql? :datetime
-              prev_cursor << "#{key}:#{collection.first.send(key).rfc3339(9)}"
-              next_cursor << "#{key}:#{collection.last.send(key).rfc3339(9)}"
+              prev_cursor << "#{key}:#{records.first.send(key).rfc3339(9)}"
+              next_cursor << "#{key}:#{records.last.send(key).rfc3339(9)}"
               next
             end
 
-            prev_cursor << "#{key}:#{collection.first.send(key)}"
-            next_cursor << "#{key}:#{collection.last.send(key)}"
+            prev_cursor << "#{key}:#{records.first.send(key)}"
+            next_cursor << "#{key}:#{records.last.send(key)}"
           end
         end
 
