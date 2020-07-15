@@ -3,6 +3,7 @@ module RbPager
     extend ActiveSupport::Concern
 
     module ClassMethods
+      include ::RbPager::Base64Encoder
 
       AR_ORDER = { '+' => :asc, '-' => :desc }
 
@@ -23,17 +24,6 @@ module RbPager
       end
 
       private
-
-      def decode(cursor)
-        return nil if cursor.nil?
-
-        decode = Base64.strict_decode64(cursor)
-        Hash[
-          decode.split(',').map do |pair|
-            k, v = pair.split(':', 2)
-          end
-        ]
-      end
 
       def apply_after
         return nil if @after.nil?
@@ -128,10 +118,10 @@ module RbPager
           end
         end
 
-        return ['', Base64.strict_encode64(next_cursor.join(','))] if (@after.nil? && @before.nil?) || @direction.eql?(:prev) && !collection.left_over?
-        return [Base64.strict_encode64(prev_cursor.join(',')), ''] if @direction.eql?(:next) && !collection.left_over?
+        return ['', encode(next_cursor.join(','))] if (@after.nil? && @before.nil?) || @direction.eql?(:prev) && !collection.left_over?
+        return [encode(prev_cursor.join(',')), ''] if @direction.eql?(:next) && !collection.left_over?
 
-        [Base64.strict_encode64(prev_cursor.join(',')), Base64.strict_encode64(next_cursor.join(','))]
+        [encode(prev_cursor.join(',')), encode(next_cursor.join(','))]
       end
     end
 
