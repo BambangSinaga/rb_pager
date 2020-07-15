@@ -9,7 +9,7 @@ For example, with offset–limit pagination, if an item from a prior page is del
 
 Cursor-based pagination also performs better for large data sets under most implementations.
 
-To support cursor-based pagination, this specification defines three query parameters `after`, `limit`, `sort`
+To support cursor-based pagination, this specification defines four query parameters `after`, `before`, `limit`, and `sort`
 
 ## Installation
 
@@ -52,22 +52,25 @@ Employee.pager(after:  'w33t44==', limit:  10, sort:  'created_at')
 Employee.pager(after:  'w33t44==', limit:  10, sort:  '-created_at')
 
 # [order by non uniq column](https://engineering.shopify.com/blogs/engineering/pagination-relative-cursors)
-# /employee?limit=10&sort=name,id
+# /employee?limit=10&sort=name,id&after=w33t44==
 Employee.pager(after:  'w33t44==', limit:  10, sort:  'name,id')
+
+# /employee?limit=10&sort=name,id&before=w33t44==
+Employee.pager(before:  'w33t44==', limit:  10, sort:  'name,id')
 
 # on EmployeesController
 records, meta = Employee.pager(limit:  15)
-# meta => { next_cursor => 'uahOI==' }
+# meta => { prev_cursor => 'ergOW==' next_cursor => 'uahOI==' }
 render  json: EmployeeSerializer.new(records, meta: meta).serialized_json, status:  :ok
 ```
 
 ## On progress
 
- - [ ] implement  `before`  cursor
- - [ ] meta url for first, last, next and previous page, collection size
+ - [x] implement  `before`  cursor
+ - [x] meta url for next and previous page
+ - [ ] meta url for first, last and collection size
  - [ ] [error-cases](https://jsonapi.org/profiles/ethanresnick/cursor-pagination/#auto-id-error-cases)
  - [ ] custom encoder
- - [ ] ui helper
 
 ## Development
 
