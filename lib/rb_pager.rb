@@ -18,5 +18,6 @@ end
 
 if defined?(ActiveRecord)
   require 'rb_pager/orm/pager_active_record'
+  require 'rb_pager/orm/active_record_relation_methods'
   ActiveRecord::Base.send :include, RbPager::ActiveRecord
 end
