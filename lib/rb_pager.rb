@@ -1,7 +1,6 @@
 require 'active_record'
 require 'rb_pager/version'
 require 'rb_pager/configuration'
-require 'pry'
 
 module RbPager
   class InvalidLimitValueError < StandardError; end

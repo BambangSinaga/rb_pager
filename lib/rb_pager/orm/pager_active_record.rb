@@ -4,99 +4,124 @@ module RbPager
 
     module ClassMethods
       AR_ORDER = { '+' => :asc, '-' => :desc }
-      AREL_ORDER = { asc: :gt, desc: :lt }
 
-      def pager(after: nil, limit: nil, sort: nil)
-        page_limit = limit || RbPager.configuration.limit
-        sort_params = sort
-
+      def pager(after: nil, before: nil, limit: nil, sort: nil)
         raise InvalidLimitValueError if limit && limit < 1
+        instance_variable_set(:@sorted_columns, nil)
 
-        sorted_columns, sorter = build_order_expression(sort)
-        collection = if after.nil?
-                       order(sorter).extending(ActiveRecordRelationMethods).limit(page_limit)
-                     else
-                       custom_expression = create_custom_expression(after, sorted_columns)
-                       where(custom_expression).order(sorter).extending(ActiveRecordRelationMethods).limit(page_limit)
-                     end
+        page_limit = limit || RbPager.configuration.limit
+        @sort = sort
+        @after = decode(after)
+        @before = decode(before)
+        @direction = :next
 
-        create_paginate_meta(collection, sorted_columns)
+        collection = where(apply_after)
+        collection = collection.where(apply_before)
+        collection = collection.order(sorted_columns)
+                               .extending(ActiveRecordRelationMethods)
+                               .limit(page_limit)
+
+        create_paginate_meta(collection)
       end
 
       private
 
-      def create_custom_expression(cursor_params, sorted_columns)
-        decode_cursor_params = JSON.parse(Base64.strict_decode64(cursor_params))
-        return arel_table[primary_key].gt(decode_cursor_params[primary_key]) if sorted_columns.blank?
+      def decode(cursor)
+        return nil if cursor.nil?
 
-        filter_ordered_columns = filter_with_ordered_columns(decode_cursor_params, sorted_columns)
-        filter_primary_key = filter_with_primary_key(decode_cursor_params)
-
-        filter_ordered_columns.or(filter_primary_key)
+        decode = Base64.strict_decode64(cursor)
+        Hash[
+          decode.split(',').map do |pair|
+            k, v = pair.split(':', 2)
+          end
+        ]
       end
 
-      def filter_with_ordered_columns(decode_cursor_params, sorted_columns)
-        result = self
-        sorted_columns.each_with_index do |(column, type), index|
-          result = if index.zero?
-                     result.arel_table[column].send(AREL_ORDER[type])
-                   else
-                     result.or(arel_table[column].send(AREL_ORDER[type]))
-                   end
+      def apply_after
+        return nil if @after.nil?
+
+        if sorted_columns.values.all? :asc
+          Arel::Nodes::GreaterThan.new(
+            Arel::Nodes::Grouping.new(@after.keys.map{ |col| arel_table[col] }),
+            Arel::Nodes::Grouping.new(@after.values.map{ |col| Arel::Nodes.build_quoted(col) })
+          )
+        else
+          @direction = :prev
+          Arel::Nodes::LessThan.new(
+            Arel::Nodes::Grouping.new(@after.keys.map{|col| arel_table[col]}),
+            Arel::Nodes::Grouping.new(@after.values.map{ |col| Arel::Nodes.build_quoted(col) })
+          )
         end
-
-        result
       end
 
-      def filter_with_primary_key(decode_cursor_params)
-        result = self
+      def apply_before
+        return nil if @before.nil?
 
-        decode_cursor_params.each_with_index do |(column, value), index|
-          result = if index.zero?
-                     result.arel_table[column].gt(value)
-                   else
-                     result.and(arel_table[column].eq(value))
-                   end
+        if sorted_columns.values.all? :asc
+          @direction = :prev
+          Arel::Nodes::LessThan.new(
+            Arel::Nodes::Grouping.new(@before.keys.map{ |col| arel_table[col] }),
+            Arel::Nodes::Grouping.new(@before.values.map{ |col| Arel::Nodes.build_quoted(col) })
+          )
+        else
+          Arel::Nodes::GreaterThan.new(
+            Arel::Nodes::Grouping.new(@before.keys.map{|col| arel_table[col]}),
+            Arel::Nodes::Grouping.new(@before.values.map{ |col| Arel::Nodes.build_quoted(col) })
+          )
         end
-
-        result
       end
 
-      def build_order_expression(sort_params)
-        return {} if sort_params.nil?
+      def sorted_columns
+        @sorted_columns ||= begin
+          sorted_columns = {} if @sort.nil?
+          sorted_columns ||= construct_sorted_columns
+        end
+      end
 
-        sort_order = { '+' => 'ASC', '-' => 'DESC' }
+      def construct_sorted_columns
         sorted_params = {}
-        arel_orders = []
+        fields = @sort.split(',')
 
-        sort_params.split(',').each do |field|
-          next unless attribute_names.include?(field)
-
+        fields.each do |field|
           sort_sign = field =~ /\A[+-]/ ? field.slice!(0) : '+'
-          arel_orders << arel_table[field].send(AR_ORDER[sort_sign])
-          sorted_params[field] = AR_ORDER[sort_sign]
+          sorted_params[field] = AR_ORDER[sort_sign] if attribute_names.include?(field)
         end
 
-        [sorted_params, arel_orders]
+        sorted_params
       end
 
-      def create_paginate_meta(collection, sorted_columns)
-        next_cursor = next_cursor(collection, sorted_columns)
+      def create_paginate_meta(collection)
+        cursor = cursor(collection)
 
-        meta = { next_cursor: next_cursor }
+        meta = { prev_cursor: cursor.first, next_cursor: cursor.last }
         [collection, meta]
       end
 
-      def next_cursor(collection, sorted_columns)
-        return '' unless collection.left_over?
+      def cursor(collection)
+        return ['', ''] if collection.total_size.zero?
 
-        next_cursor = { 'id': collection.last.id }
+        prev_cursor, next_cursor = [], []
 
-        sorted_columns.each do |key, _value|
-          next_cursor.merge!(Hash[key, collection.last.send(key)])
+        if sorted_columns.blank?
+          prev_cursor = ["#{primary_key}:#{collection.first.send(primary_key)}"]
+          next_cursor = ["#{primary_key}:#{collection.last.send(primary_key)}"]
+        else
+          sorted_columns.each do |key, _value|
+            if type_for_attribute(key).type.eql? :datetime
+              prev_cursor << "#{key}:#{collection.first.send(key).rfc3339(9)}"
+              next_cursor << "#{key}:#{collection.last.send(key).rfc3339(9)}"
+              next
+            end
+
+            prev_cursor << "#{key}:#{collection.first.send(key)}"
+            next_cursor << "#{key}:#{collection.last.send(key)}"
+          end
         end
 
-        Base64.strict_encode64(next_cursor.to_json)
+        return ['', Base64.strict_encode64(next_cursor.join(','))] if (@after.nil? && @before.nil?) || @direction.eql?(:prev) && !collection.left_over?
+        return [Base64.strict_encode64(prev_cursor.join(',')), ''] if @direction.eql?(:next) && !collection.left_over?
+
+        [Base64.strict_encode64(prev_cursor.join(',')), Base64.strict_encode64(next_cursor.join(','))]
       end
     end
 
