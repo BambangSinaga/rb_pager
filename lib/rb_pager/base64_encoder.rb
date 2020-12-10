@@ -6,7 +6,7 @@ module RbPager
     end
 
     def decode(data)
-      return nil if data.nil?
+      return nil if data.to_s.empty?
 
       decoded_data = Base64.strict_decode64(data)
       Hash[
