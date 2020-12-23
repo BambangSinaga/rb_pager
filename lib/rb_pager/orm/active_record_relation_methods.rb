@@ -4,7 +4,7 @@ module RbPager
       def left_over?
         @left_over ||= begin
           # Cache #size otherwise multiple calls to the database will occur.
-          size.positive? && size < total_size
+          records.size.positive? && records.size < total_size
         end
       end
 

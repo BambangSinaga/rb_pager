@@ -8,12 +8,13 @@ module RbPager
       AR_ORDER = { '+' => :asc, '-' => :desc }
 
       def pager(after: nil, before: nil, limit: nil, sort: nil)
-        raise InvalidLimitValueError if limit && limit < 1
         instance_variable_set(:@sorted_columns, nil)
         instance_variable_set(:@collection, nil)
         instance_variable_set(:@records, nil)
 
+        limit = nil if limit && limit < 2
         @page_limit = limit || RbPager.configuration.limit
+        raise InvalidLimitValueError if @page_limit && @page_limit < 1
         @sort = sort
 
         @after = decode(after)
@@ -118,8 +119,8 @@ module RbPager
           end
         end
 
-        return ['', encode(next_cursor.join(','))] if (@after.nil? && @before.nil?) || @direction.eql?(:prev) && !collection.left_over?
-        return [encode(prev_cursor.join(',')), ''] if @direction.eql?(:next) && !collection.left_over?
+        return ['', encode(next_cursor.join(','))] if (@after.nil? && @before.nil?) && collection.left_over?
+        return [encode(prev_cursor.join(',')), ''] if !collection.left_over?
 
         [encode(prev_cursor.join(',')), encode(next_cursor.join(','))]
       end
