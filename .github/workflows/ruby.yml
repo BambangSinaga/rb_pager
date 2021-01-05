@@ -37,6 +37,8 @@ jobs:
       uses: ruby/setup-ruby@ec106b438a1ff6ff109590de34ddc62c540232e0
       with:
         ruby-version: 2.6
+      env:
+        ACTIONS_ALLOW_UNSECURE_COMMANDS: true
     - name: Setup System
       run: |
           sudo apt-get -y install libpq-dev
@@ -44,7 +46,6 @@ jobs:
       run: bundle install
     - name: Run tests
       env:
-        ACTIONS_ALLOW_UNSECURE_COMMANDS: true
         DATABASE_URL: postgres://postgres:password@localhost:5432/rb_pager_test
       run: |
           bundle exec rake db:create
